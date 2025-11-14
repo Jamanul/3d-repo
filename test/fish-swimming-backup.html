@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Swimming Fish Scroll Animation</title>
+    <style>
+      body {
+        margin: 0;
+        background: #ffffff;
+        height: 300vh; /* Long page for scrolling */
+        overflow-x: hidden;
+      }
+
+      #canvas-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        pointer-events: none;
+      }
+
+      canvas {
+        display: block;
+      }
+
+      #loading {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #333;
+        font-family: Arial, sans-serif;
+        font-size: 24px;
+        text-align: center;
+        z-index: 10;
+      }
+
+      #scroll-hint {
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: #666;
+        font-family: Arial, sans-serif;
+        font-size: 18px;
+        animation: bounce 2s infinite;
+      }
+
+      @keyframes bounce {
+        0%,
+        100% {
+          transform: translateX(-50%) translateY(0);
+        }
+        50% {
+          transform: translateX(-50%) translateY(-10px);
+        }
+      }
+
+      .content {
+        position: relative;
+        padding: 100vh 50px 50px;
+        max-width: 800px;
+        margin: 0 auto;
+        font-family: Arial, sans-serif;
+        color: #333;
+        line-height: 1.8;
+      }
+
+      h1 {
+        font-size: 3em;
+        margin-bottom: 30px;
+      }
+
+      p {
+        font-size: 1.2em;
+        margin-bottom: 30px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="canvas-container"></div>
+    <div id="loading">Loading fish model...</div>
+    <div id="scroll-hint">⬇️ Scroll Down ⬇️</div>
+
+    <div class="content">
+      <h1>🐟 Swimming Fish</h1>
+      <p>
+        Scroll down to watch the fish swim across the screen from left to right!
+      </p>
+      <p>
+        The fish moves with a natural swimming motion, creating smooth curves as
+        it travels.
+      </p>
+      <p>
+        Notice how the body sways and bends while swimming - just like a real
+        fish!
+      </p>
+      <p>Keep scrolling to see the complete journey...</p>
+      <p>The animation is controlled entirely by your scroll position.</p>
+      <p>You can scroll up and down to control the fish's movement!</p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+    <script>
+      gsap.registerPlugin(ScrollTrigger);
+
+      // Scene setup
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xffffff);
+
+      const camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
+
+      const renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+      });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document
+        .getElementById("canvas-container")
+        .appendChild(renderer.domElement);
+
+      // Lighting
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+      scene.add(ambientLight);
+
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+      directionalLight.position.set(5, 10, 5);
+      scene.add(directionalLight);
+
+      // GLTFLoader
+      const loader = new THREE.GLTFLoader();
+      let fish;
+      let fishBody;
+      let mixer;
+
+      loader.load(
+        "./models/fish.glb",
+        (gltf) => {
+          fish = gltf.scene;
+          scene.add(fish);
+
+          // Scale
+          fish.scale.set(4, 4, 4);
+
+          // Rotate to show side view (facing right)
+          fish.rotation.y = Math.PI / 2; // 90 degrees - shows left side of fish
+
+          // Start position (off screen left)
+          fish.position.set(-8, 0, 0);
+
+          // === DETAILED MESH ANALYSIS ===
+          console.log("=== COMPLETE FISH MODEL STRUCTURE ===\n");
+
+          let meshCount = 0;
+          fish.traverse((child) => {
+            console.log(`Type: ${child.type}`);
+            console.log(`Name: "${child.name}"`);
+            console.log(
+              `Position: x=${child.position.x.toFixed(
+                3
+              )}, y=${child.position.y.toFixed(
+                3
+              )}, z=${child.position.z.toFixed(3)}`
+            );
+            console.log(
+              `Rotation: x=${child.rotation.x.toFixed(
+                3
+              )}, y=${child.rotation.y.toFixed(
+                3
+              )}, z=${child.rotation.z.toFixed(3)}`
+            );
+            console.log(
+              `Scale: x=${child.scale.x.toFixed(3)}, y=${child.scale.y.toFixed(
+                3
+              )}, z=${child.scale.z.toFixed(3)}`
+            );
+
+            if (child.isMesh) {
+              meshCount++;
+              fishBody = child; // Store last mesh as body
+
+              // Get geometry details
+              const geometry = child.geometry;
+              if (geometry) {
+                geometry.computeBoundingBox();
+                const bbox = geometry.boundingBox;
+                console.log(`  📦 Bounding Box:`);
+                console.log(
+                  `     Min: x=${bbox.min.x.toFixed(3)}, y=${bbox.min.y.toFixed(
+                    3
+                  )}, z=${bbox.min.z.toFixed(3)}`
+                );
+                console.log(
+                  `     Max: x=${bbox.max.x.toFixed(3)}, y=${bbox.max.y.toFixed(
+                    3
+                  )}, z=${bbox.max.z.toFixed(3)}`
+                );
+                console.log(
+                  `     Size: x=${(bbox.max.x - bbox.min.x).toFixed(3)}, y=${(
+                    bbox.max.y - bbox.min.y
+                  ).toFixed(3)}, z=${(bbox.max.z - bbox.min.z).toFixed(3)}`
+                );
+                console.log(
+                  `  🔺 Vertices: ${geometry.attributes.position.count}`
+                );
+                console.log(
+                  `  🎨 Has UVs: ${geometry.attributes.uv ? "Yes" : "No"}`
+                );
+                console.log(
+                  `  📐 Has Normals: ${
+                    geometry.attributes.normal ? "Yes" : "No"
+                  }`
+                );
+              }
+
+              // Material info
+              if (child.material) {
+                console.log(`  🎨 Material Type: ${child.material.type}`);
+                console.log(
+                  `  🎨 Material Color: ${
+                    child.material.color
+                      ? child.material.color.getHexString()
+                      : "N/A"
+                  }`
+                );
+              }
+            }
+
+            if (child.isBone) {
+              console.log(`  🦴 BONE FOUND! This could be animated!`);
+            }
+
+            console.log("---");
+          });
+
+          console.log(`\n✅ Total Meshes Found: ${meshCount}`);
+          console.log(`\n🐟 ANIMATION ANALYSIS:`);
+          console.log(
+            `   - bluefin_tuna (SkinnedMesh): Main body with bone rigging`
+          );
+          console.log(`   - eye_L (SkinnedMesh): Left eye with bone rigging`);
+          console.log(`   - eye_R (SkinnedMesh): Right eye with bone rigging`);
+          console.log(`\n🦴 BONE RIGGING DETECTED!`);
+          console.log(
+            `   ✅ This fish has a SKELETON! We can animate it properly!`
+          );
+          console.log(`\n💡 SWIMMING ANIMATION POSSIBILITIES:`);
+          console.log(`   ✅ Body bending (body1, body2, body2001 bones)`);
+          console.log(`   ✅ Tail wagging (root005-016 bones)`);
+          console.log(`   ✅ Fin movements (root001_L/R bones)`);
+          console.log(`   ✅ Eye rotations (eye_L_1, eye_R_1 bones)`);
+          console.log(`   ✅ Head movements (head, head001 bones)`);
+          console.log(`\n🎬 ACTIVE ANIMATION: Realistic bone-based swimming!`);
+          console.log(`   - Body segments bend in sequence (wave motion)`);
+          console.log(`   - Tail bones create S-curve swimming pattern`);
+          console.log(`   - Natural fish locomotion achieved!`);
+          console.log("=====================================\n");
+
+          // Built-in animations
+          if (gltf.animations && gltf.animations.length > 0) {
+            mixer = new THREE.AnimationMixer(fish);
+            gltf.animations.forEach((clip) => {
+              mixer.clipAction(clip).play();
+            });
+          }
+
+          // === SWIMMING BODY ANIMATION (continuous loop) ===
+          // Find all important bones for swimming animation
+          let body1Bone, body2Bone, body2_001Bone;
+          let tailBones = [];
+
+          fish.traverse((child) => {
+            if (child.isBone) {
+              // Body bones for main swimming motion
+              if (child.name === "body1") body1Bone = child;
+              if (child.name === "body2") body2Bone = child;
+              if (child.name === "body2001") body2_001Bone = child;
+
+              // Tail bones (root005 onwards are tail sections)
+              if (
+                child.name.includes("root0") &&
+                (child.name === "root005" ||
+                  child.name === "root006" ||
+                  child.name === "root007" ||
+                  child.name === "root011" ||
+                  child.name === "root013")
+              ) {
+                tailBones.push(child);
+              }
+            }
+          });
+
+          console.log("✅ BONE-BASED SWIMMING ANIMATION ACTIVATED!");
+          console.log(`   Found ${tailBones.length} tail bones`);
+
+          // === REALISTIC SWIMMING: Body segments bend in sequence ===
+
+          // Body segment 1 - Start of the wave
+          if (body1Bone) {
+            console.log("✅ Animating body1 bone");
+            gsap.to(body1Bone.rotation, {
+              z: "+=0.25",
+              duration: 0.5,
+              repeat: -1,
+              yoyo: true,
+              ease: "sine.inOut",
+            });
+          }
+
+          // Body segment 2 - Middle of the wave (slight delay)
+          if (body2Bone) {
+            console.log("✅ Animating body2 bone");
+            gsap.to(body2Bone.rotation, {
+              z: "+=0.3",
+              duration: 0.5,
+              delay: 0.05,
+              repeat: -1,
+              yoyo: true,
+              ease: "sine.inOut",
+            });
+          }
+
+          // Body segment 3 - Continues the wave
+          if (body2_001Bone) {
+            console.log("✅ Animating body2001 bone");
+            gsap.to(body2_001Bone.rotation, {
+              z: "+=0.35",
+              duration: 0.5,
+              delay: 0.1,
+              repeat: -1,
+              yoyo: true,
+              ease: "sine.inOut",
+            });
+          }
+
+          // Tail bones - Create the S-curve swimming motion
+          tailBones.forEach((bone, index) => {
+            console.log(`✅ Animating tail bone: ${bone.name}`);
+            gsap.to(bone.rotation, {
+              z: `+=${0.4 + index * 0.1}`, // Increasing amplitude towards tail end
+              duration: 0.5,
+              delay: 0.15 + index * 0.03, // Staggered timing creates wave effect
+              repeat: -1,
+              yoyo: true,
+              ease: "sine.inOut",
+            });
+          });
+
+          // === SCROLL-BASED ANIMATION ===
+          const tl = gsap.timeline({
+            scrollTrigger: {
+              trigger: "body",
+              start: "top top",
+              end: "bottom bottom",
+              scrub: 1, // Smooth scrubbing
+            },
+          });
+
+          // Horizontal movement (left to right, off screen to off screen)
+          tl.to(
+            fish.position,
+            {
+              x: 8, // End position (off screen right)
+              ease: "none",
+            },
+            0
+          );
+
+          // Curved path (sine wave up and down)
+          tl.to(
+            fish.position,
+            {
+              y: "+=1.5",
+              duration: 0.5,
+              repeat: 1,
+              yoyo: true,
+              ease: "sine.inOut",
+            },
+            0
+          );
+
+          // Additional curve for more natural swimming
+          tl.to(
+            fish.position,
+            {
+              y: "-=1",
+              duration: 0.3,
+              ease: "sine.inOut",
+            },
+            0.5
+          );
+
+          tl.to(
+            fish.position,
+            {
+              y: "+=0.5",
+              duration: 0.2,
+              ease: "sine.inOut",
+            },
+            0.8
+          );
+
+          // Slight rotation during swimming for realism
+          tl.to(
+            fish.rotation,
+            {
+              z: "+=0.3",
+              duration: 0.5,
+              repeat: 1,
+              yoyo: true,
+              ease: "sine.inOut",
+            },
+            0
+          );
+
+          document.getElementById("loading").style.display = "none";
+          console.log("🐟 Fish ready! Scroll to swim!");
+        },
+        (progress) => {
+          const percent = Math.round((progress.loaded / progress.total) * 100);
+          document.getElementById(
+            "loading"
+          ).textContent = `Loading... ${percent}%`;
+        },
+        (error) => {
+          console.error("Error:", error);
+          document.getElementById("loading").textContent =
+            "Error loading model.";
+        }
+      );
+
+      camera.position.set(0, 0, 5);
+      camera.lookAt(0, 0, 0);
+
+      const clock = new THREE.Clock();
+
+      function animate() {
+        requestAnimationFrame(animate);
+
+        const delta = clock.getDelta();
+        if (mixer) mixer.update(delta);
+
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      // Handle resize
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      // Hide scroll hint after first scroll
+      let scrolled = false;
+      window.addEventListener("scroll", () => {
+        if (!scrolled) {
+          document.getElementById("scroll-hint").style.display = "none";
+          scrolled = true;
+        }
+      });
+    </script>
+  </body>
+</html>

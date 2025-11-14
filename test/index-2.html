@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Swimming Fish with Water Reflection</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        overflow-x: hidden;
+        background: linear-gradient(
+          to bottom,
+          #1a1a2e 0%,
+          #0f0f1e 50%,
+          #000000 100%
+        );
+      }
+      .custom-relative {
+        position: relative;
+      }
+      /* Hero Section */
+      .hero-section {
+        position: relative;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      /* Water container - FIXED at hero bottom */
+      #water-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        pointer-events: none;
+        z-index: 5;
+      }
+
+      /* Canvas container - FIXED position for fish to extend */
+      #canvas-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      canvas {
+        display: block;
+      }
+
+      /* Dark underwater section */
+      .underwater-section {
+        position: relative;
+        min-height: 150vh;
+        padding: 100px 50px;
+        z-index: 5;
+      }
+
+      .deep-section {
+        position: relative;
+        min-height: 150vh;
+
+        padding: 100px 50px;
+        z-index: 5;
+      }
+
+      .abyss-section {
+        position: relative;
+        min-height: 200vh;
+
+        padding: 100px 50px;
+        z-index: 5;
+      }
+
+      .return-section {
+        position: relative;
+        min-height: 200vh;
+
+        padding: 100px 50px;
+        z-index: 5;
+      }
+
+      .underwater-content {
+        max-width: 800px;
+        margin: 0 auto;
+        color: #fff;
+        opacity: 0.8;
+      }
+
+      .underwater-content h2 {
+        font-size: 3em;
+        margin-bottom: 30px;
+        font-family: Arial, sans-serif;
+        color: #6ac5d4;
+      }
+
+      .underwater-content p {
+        font-size: 1.3em;
+        line-height: 1.8;
+        margin-bottom: 30px;
+        font-family: Arial, sans-serif;
+      }
+
+      #loading {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #333;
+        font-family: Arial, sans-serif;
+        font-size: 24px;
+        text-align: center;
+        z-index: 100;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 20px 40px;
+        border-radius: 10px;
+      }
+
+      #scroll-hint {
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: #fff;
+        font-family: Arial, sans-serif;
+        font-size: 18px;
+        animation: bounce 2s infinite;
+        z-index: 20;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        display: none;
+      }
+      #smooth-wrapper {
+        position: relative;
+        z-index: 10;
+      }
+      @keyframes bounce {
+        0%,
+        100% {
+          transform: translateX(-50%) translateY(0);
+        }
+        50% {
+          transform: translateX(-50%) translateY(-10px);
+        }
+      }
+      .z-100 {
+        z-index: 100;
+      }
+    </style>
+  </head>
+  <body class="custom-relative">
+    <div id="canvas-container"></div>
+    <div id="smooth-wrapper" class="custom-relative z-100">
+      <div id="smooth-content" class="custom-relative">
+        <div id="loading">Loading assets...</div>
+        <div id="scroll-hint">⬇️ Scroll to see the fish dive ⬇️</div>
+
+        <!-- Hero Section -->
+        <section class="hero-section">
+          <div id="water-container"></div>
+        </section>
+
+        <!-- Dark Underwater Section -->
+        <section class="underwater-section">
+          <div class="underwater-content">
+            <h2>🌊 Deep Underwater</h2>
+            <p>
+              The fish has dived into the deep ocean, swimming through the dark
+              waters...
+            </p>
+            <p>
+              Watch as it gracefully moves through this mysterious underwater
+              world.
+            </p>
+            <p>
+              The swimming continues with natural body movements and tail
+              motion.
+            </p>
+          </div>
+        </section>
+
+        <!-- Deep Section -->
+        <section class="deep-section">
+          <div class="underwater-content">
+            <h2>🐠 Exploring the Depths</h2>
+            <p>
+              The fish glides effortlessly through the darker waters, swimming
+              from right to left...
+            </p>
+            <p>
+              Ancient currents guide its path through the mysterious ocean
+              depths.
+            </p>
+            <p>Keep scrolling to witness more of this aquatic journey...</p>
+          </div>
+        </section>
+
+        <!-- Abyss Section -->
+        <section class="abyss-section">
+          <div class="underwater-content">
+            <h2>🌑 The Abyss</h2>
+            <p>
+              Now swimming back across, the fish navigates through the deepest
+              parts of the ocean...
+            </p>
+            <p>
+              Bioluminescent creatures light the way as it continues its
+              journey.
+            </p>
+            <p>
+              The darkness holds many wonders for those who dare to explore...
+            </p>
+            <p>
+              Watch as the fish masters the currents with grace and precision...
+            </p>
+          </div>
+        </section>
+
+        <!-- Return Section -->
+        <section class="return-section">
+          <div class="underwater-content">
+            <h2>⬆️ Rising to the Surface</h2>
+            <p>
+              The final stretch of the journey begins as the fish swims one last
+              time...
+            </p>
+            <p>
+              Moving from left to right, it heads towards brighter waters
+              above...
+            </p>
+            <p>Almost there... the fish is returning to where it began...</p>
+            <p>And finally, it completes its magnificent underwater odyssey!</p>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollSmoother.min.js"></script>
+    <script>
+      gsap.registerPlugin(ScrollTrigger);
+      gsap.registerPlugin(ScrollSmoother);
+      ScrollSmoother.create({
+        smooth: 2, // Increased for smoother scrolling
+        effects: true,
+        smoothTouch: 0.1,
+      });
+
+      const scene = new THREE.Scene();
+
+      const camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
+
+      const renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+      });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document
+        .getElementById("canvas-container")
+        .appendChild(renderer.domElement);
+
+      const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+      scene.add(ambientLight);
+
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+      directionalLight.position.set(5, 10, 5);
+      scene.add(directionalLight);
+
+      const pointLight = new THREE.PointLight(0xffffff, 0.8);
+      pointLight.position.set(0, 5, 5);
+      scene.add(pointLight);
+
+      class Water extends THREE.Mesh {
+        constructor(geometry, options = {}) {
+          super(geometry);
+          this.isWater = true;
+
+          const textureWidth = options.textureWidth || 512;
+          const textureHeight = options.textureHeight || 512;
+          const clipBias = options.clipBias || 0.0;
+          const alpha = options.alpha || 1.0;
+          const time = options.time || 0.0;
+          const normalSampler = options.waterNormals || null;
+          const sunDirection =
+            options.sunDirection || new THREE.Vector3(0.70707, 0.70707, 0.0);
+          const sunColor = new THREE.Color(options.sunColor || 0xffffff);
+          const waterColor = new THREE.Color(options.waterColor || 0x7f7f7f);
+          const eye = options.eye || new THREE.Vector3(0, 0, 0);
+          const distortionScale = options.distortionScale || 20.0;
+          const side = options.side || THREE.FrontSide;
+          const fog = options.fog || false;
+
+          const mirrorPlane = new THREE.Plane();
+          const normal = new THREE.Vector3();
+          const mirrorWorldPosition = new THREE.Vector3();
+          const cameraWorldPosition = new THREE.Vector3();
+          const rotationMatrix = new THREE.Matrix4();
+          const lookAtPosition = new THREE.Vector3(0, 0, -1);
+          const clipPlane = new THREE.Vector4();
+          const view = new THREE.Vector3();
+          const target = new THREE.Vector3();
+          const q = new THREE.Vector4();
+          const textureMatrix = new THREE.Matrix4();
+          const mirrorCamera = new THREE.PerspectiveCamera();
+          const renderTarget = new THREE.WebGLRenderTarget(
+            textureWidth,
+            textureHeight
+          );
+
+          const mirrorShader = {
+            uniforms: THREE.UniformsUtils.merge([
+              THREE.UniformsLib["fog"],
+              THREE.UniformsLib["lights"],
+              {
+                normalSampler: { value: null },
+                mirrorSampler: { value: null },
+                alpha: { value: 1.0 },
+                time: { value: 0.0 },
+                size: { value: 1.0 },
+                distortionScale: { value: 20.0 },
+                textureMatrix: { value: new THREE.Matrix4() },
+                sunColor: { value: new THREE.Color(0x7f7f7f) },
+                sunDirection: { value: new THREE.Vector3(0.70707, 0.70707, 0) },
+                eye: { value: new THREE.Vector3() },
+                waterColor: { value: new THREE.Color(0x555555) },
+              },
+            ]),
+            vertexShader: `
+              uniform mat4 textureMatrix;
+              uniform float time;
+              varying vec4 mirrorCoord;
+              varying vec4 worldPosition;
+
+              void main() {
+                mirrorCoord = modelMatrix * vec4(position, 1.0);
+                worldPosition = mirrorCoord.xyzw;
+                mirrorCoord = textureMatrix * mirrorCoord;
+                vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                gl_Position = projectionMatrix * mvPosition;
+              }
+            `,
+            fragmentShader: `
+              uniform sampler2D mirrorSampler;
+              uniform float alpha;
+              uniform float time;
+              uniform float size;
+              uniform float distortionScale;
+              uniform sampler2D normalSampler;
+              uniform vec3 sunColor;
+              uniform vec3 sunDirection;
+              uniform vec3 eye;
+              uniform vec3 waterColor;
+              varying vec4 mirrorCoord;
+              varying vec4 worldPosition;
+
+              vec4 getNoise(vec2 uv) {
+                vec2 uv0 = (uv / 200.0) + vec2(time / 100.0, time / 140.0);
+                vec2 uv1 = uv / 250.0 - vec2(time / -120.0, time / 160.0);
+                vec2 uv2 = uv / vec2(10000.0, 12000.0) + vec2(time / 500.0, time / 450.0);
+                vec2 uv3 = uv / vec2(1500.0, 1800.0) - vec2(time / 520.0, time / -580.0);
+                vec4 noise = texture2D(normalSampler, uv0) +
+                  texture2D(normalSampler, uv1) +
+                  texture2D(normalSampler, uv2) +
+                  texture2D(normalSampler, uv3);
+                return noise * 0.5 - 1.0;
+              }
+
+              void sunLight(const vec3 surfaceNormal, const vec3 eyeDirection, float shiny, float spec, float diffuse, inout vec3 diffuseColor, inout vec3 specularColor) {
+                vec3 reflection = normalize(reflect(-sunDirection, surfaceNormal));
+                float direction = max(0.0, dot(eyeDirection, reflection));
+                specularColor += pow(direction, shiny) * sunColor * spec;
+                diffuseColor += max(dot(sunDirection, surfaceNormal), 0.0) * sunColor * diffuse;
+              }
+
+              void main() {
+                vec4 noise = getNoise(worldPosition.xz * size);
+                vec3 surfaceNormal = normalize(noise.xzy * vec3(0.3, 1.0, 0.3));
+                vec3 diffuseLight = vec3(0.0);
+                vec3 specularLight = vec3(0.0);
+                vec3 worldToEye = eye - worldPosition.xyz;
+                vec3 eyeDirection = normalize(worldToEye);
+                sunLight(surfaceNormal, eyeDirection, 300.0, 4.0, 0.9, diffuseLight, specularLight);
+                float distance = length(worldToEye);
+                vec2 distortion = surfaceNormal.xz * (0.0002 + 0.3 / distance) * distortionScale;
+                vec3 reflectionSample = vec3(texture2D(mirrorSampler, mirrorCoord.xy / mirrorCoord.w + distortion));
+                float theta = max(dot(eyeDirection, surfaceNormal), 0.0);
+                float rf0 = 0.1;
+                float reflectance = rf0 + (1.0 - rf0) * pow((1.0 - theta), 2.5);
+                vec3 scatter = max(0.0, dot(surfaceNormal, eyeDirection)) * waterColor;
+                vec3 albedo = mix((sunColor * diffuseLight * 0.15 + scatter * 0.2), (vec3(0.03) + reflectionSample * 0.97 + reflectionSample * specularLight), reflectance * 1.4);
+                vec3 finalColor = mix(worldPosition.xyz * 0.0 + albedo, albedo, 0.5);
+                gl_FragColor = vec4(albedo, alpha);
+              }
+            `,
+          };
+
+          const material = new THREE.ShaderMaterial({
+            uniforms: THREE.UniformsUtils.clone(mirrorShader.uniforms),
+            vertexShader: mirrorShader.vertexShader,
+            fragmentShader: mirrorShader.fragmentShader,
+            lights: true,
+            side: side,
+            fog: fog,
+          });
+          material.transparent = true;
+          material.uniforms["mirrorSampler"].value = renderTarget.texture;
+          material.uniforms["textureMatrix"].value = textureMatrix;
+          material.uniforms["alpha"].value = alpha;
+          material.uniforms["alpha"].value = 0.6;
+          material.uniforms["time"].value = time;
+          material.uniforms["normalSampler"].value = normalSampler;
+          material.uniforms["sunColor"].value = sunColor;
+          material.uniforms["waterColor"].value = waterColor;
+          material.uniforms["sunDirection"].value = sunDirection;
+          material.uniforms["distortionScale"].value = distortionScale;
+          material.uniforms["eye"].value = eye;
+
+          this.material = material;
+          const scope = this;
+
+          this.onBeforeRender = function (renderer, scene, camera) {
+            mirrorWorldPosition.setFromMatrixPosition(scope.matrixWorld);
+            cameraWorldPosition.setFromMatrixPosition(camera.matrixWorld);
+            rotationMatrix.extractRotation(scope.matrixWorld);
+            normal.set(0, 0, 1);
+            normal.applyMatrix4(rotationMatrix);
+            view.subVectors(mirrorWorldPosition, cameraWorldPosition);
+            if (view.dot(normal) > 0) return;
+            view.reflect(normal).negate();
+            view.add(mirrorWorldPosition);
+            rotationMatrix.extractRotation(camera.matrixWorld);
+            lookAtPosition.set(0, 0, -1);
+            lookAtPosition.applyMatrix4(rotationMatrix);
+            lookAtPosition.add(cameraWorldPosition);
+            target.subVectors(mirrorWorldPosition, lookAtPosition);
+            target.reflect(normal).negate();
+            target.add(mirrorWorldPosition);
+            mirrorCamera.position.copy(view);
+            mirrorCamera.up.set(0, 1, 0);
+            mirrorCamera.up.applyMatrix4(rotationMatrix);
+            mirrorCamera.up.reflect(normal);
+            mirrorCamera.lookAt(target);
+            mirrorCamera.far = camera.far;
+            mirrorCamera.updateMatrixWorld();
+            mirrorCamera.projectionMatrix.copy(camera.projectionMatrix);
+            textureMatrix.set(
+              0.5,
+              0.0,
+              0.0,
+              0.5,
+              0.0,
+              0.5,
+              0.0,
+              0.5,
+              0.0,
+              0.0,
+              0.5,
+              0.5,
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            );
+            textureMatrix.multiply(mirrorCamera.projectionMatrix);
+            textureMatrix.multiply(mirrorCamera.matrixWorldInverse);
+            mirrorPlane.setFromNormalAndCoplanarPoint(
+              normal,
+              mirrorWorldPosition
+            );
+            mirrorPlane.applyMatrix4(mirrorCamera.matrixWorldInverse);
+            clipPlane.set(
+              mirrorPlane.normal.x,
+              mirrorPlane.normal.y,
+              mirrorPlane.normal.z,
+              mirrorPlane.constant
+            );
+            const projectionMatrix = mirrorCamera.projectionMatrix;
+            q.x =
+              (Math.sign(clipPlane.x) + projectionMatrix.elements[8]) /
+              projectionMatrix.elements[0];
+            q.y =
+              (Math.sign(clipPlane.y) + projectionMatrix.elements[9]) /
+              projectionMatrix.elements[5];
+            q.z = -1.0;
+            q.w =
+              (1.0 + projectionMatrix.elements[10]) /
+              projectionMatrix.elements[14];
+            clipPlane.multiplyScalar(2.0 / clipPlane.dot(q));
+            projectionMatrix.elements[2] = clipPlane.x;
+            projectionMatrix.elements[6] = clipPlane.y;
+            projectionMatrix.elements[10] = clipPlane.z + 1.0 - clipBias;
+            projectionMatrix.elements[14] = clipPlane.w;
+            eye.setFromMatrixPosition(camera.matrixWorld);
+            const currentRenderTarget = renderer.getRenderTarget();
+            const currentXrEnabled = renderer.xr.enabled;
+            const currentShadowAutoUpdate = renderer.shadowMap.autoUpdate;
+            scope.visible = false;
+            renderer.xr.enabled = false;
+            renderer.shadowMap.autoUpdate = false;
+            renderer.setRenderTarget(renderTarget);
+            renderer.state.buffers.depth.setMask(true);
+            if (renderer.autoClear === false) renderer.clear();
+            renderer.render(scene, mirrorCamera);
+            scope.visible = true;
+            renderer.xr.enabled = currentXrEnabled;
+            renderer.shadowMap.autoUpdate = currentShadowAutoUpdate;
+            renderer.setRenderTarget(currentRenderTarget);
+            const viewport = camera.viewport;
+            if (viewport !== undefined) {
+              renderer.state.viewport(viewport);
+            }
+          };
+        }
+      }
+
+      let water;
+      let fish;
+      let fishContainer;
+      let mixer;
+
+      const loader = new THREE.TextureLoader();
+      loader.load(
+        "https://threejs.org/examples/textures/waternormals.jpg",
+        function (waterNormals) {
+          waterNormals.wrapS = waterNormals.wrapT = THREE.RepeatWrapping;
+
+          const waterGeometry = new THREE.PlaneGeometry(100, 100);
+          water = new Water(waterGeometry, {
+            textureWidth: 1024,
+            textureHeight: 1024,
+            waterNormals: waterNormals,
+            sunDirection: new THREE.Vector3(0.70707, 0.70707, 0),
+            sunColor: 0xffffff,
+            waterColor: 0xe6d5f0,
+            distortionScale: 0.8,
+            alpha: 0.92,
+            fog: scene.fog !== undefined,
+          });
+          water.rotation.x = -Math.PI / 2;
+          water.position.y = -2;
+          scene.add(water);
+
+          loadFish();
+        },
+        undefined,
+        function (error) {
+          console.error("Error loading water normals:", error);
+          document.getElementById("loading").textContent =
+            "Error loading water texture";
+        }
+      );
+
+      function loadFish() {
+        const gltfLoader = new THREE.GLTFLoader();
+
+        gltfLoader.load(
+          "./models/fish.glb",
+          (gltf) => {
+            fish = gltf.scene;
+
+            fishContainer = new THREE.Object3D();
+            scene.add(fishContainer);
+            fishContainer.add(fish);
+
+            fish.scale.set(10, 10, 10);
+            fish.rotation.y = Math.PI / 2;
+            fishContainer.position.set(0, 0.5, 0);
+
+            if (gltf.animations && gltf.animations.length > 0) {
+              mixer = new THREE.AnimationMixer(fish);
+              gltf.animations.forEach((clip) => {
+                mixer.clipAction(clip).play();
+              });
+            }
+
+            let body1Bone, body2Bone, body2_001Bone;
+            let tailBones = [];
+
+            fish.traverse((child) => {
+              if (child.isBone) {
+                if (child.name === "body1") body1Bone = child;
+                if (child.name === "body2") body2Bone = child;
+                if (child.name === "body2001") body2_001Bone = child;
+
+                if (
+                  child.name.includes("root0") &&
+                  (child.name === "root005" ||
+                    child.name === "root006" ||
+                    child.name === "root007" ||
+                    child.name === "root011" ||
+                    child.name === "root013")
+                ) {
+                  tailBones.push(child);
+                }
+              }
+            });
+
+            if (body1Bone) {
+              gsap.to(body1Bone.rotation, {
+                z: "+=0.25",
+                duration: 0.5,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut",
+              });
+            }
+
+            if (body2Bone) {
+              gsap.to(body2Bone.rotation, {
+                z: "+=0.3",
+                duration: 0.5,
+                delay: 0.05,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut",
+              });
+            }
+
+            if (body2_001Bone) {
+              gsap.to(body2_001Bone.rotation, {
+                z: "+=0.35",
+                duration: 0.5,
+                delay: 0.1,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut",
+              });
+            }
+
+            tailBones.forEach((bone, index) => {
+              gsap.to(bone.rotation, {
+                z: `+=${0.4 + index * 0.1}`,
+                duration: 0.5,
+                delay: 0.15 + index * 0.03,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut",
+              });
+            });
+
+            // === SCROLL-BASED JOURNEY (800vh) ===
+            const tl = gsap.timeline({
+              scrollTrigger: {
+                trigger: "body",
+                start: "top top",
+                end: "bottom bottom",
+                scrub: 2.5,
+                onUpdate: (self) => {
+                  if (water) {
+                    water.visible = self.progress < 0.14;
+                  }
+                },
+              },
+            });
+
+            // PHASE 1: Brief hover at center (0-3%)
+            tl.fromTo(
+              fishContainer.position,
+              { x: 0, y: 0.5, z: 0 },
+              { x: 0, y: 0.5, z: 0, duration: 0.03 },
+              0
+            );
+
+            // PHASE 2: DRAMATIC NOSE DIVE into water (3-16%)
+            // Start angling down immediately
+            tl.to(
+              fishContainer.rotation,
+              {
+                z: -Math.PI / 5,
+
+                duration: 0.04,
+                ease: "power1.in",
+              },
+              0.0
+            );
+
+            // Steep dive downward
+            tl.to(
+              fishContainer.position,
+              {
+                x: 8,
+                y: -5,
+                duration: 0.13,
+                ease: "power1.inOut",
+              },
+              0.02
+            );
+
+            // PHASE 3: Level out gradually and swim to right (16-28%)
+            tl.to(
+              fishContainer.rotation,
+              {
+                z: 0,
+                duration: 0.08,
+                ease: "power1.out",
+              },
+              0.16
+            );
+
+            tl.to(
+              fishContainer.position,
+              {
+                x: 35,
+                y: -8,
+                duration: 0.12,
+                ease: "power1.inOut",
+              },
+              0.16
+            );
+
+            // PHASE 4: Turn to face left (28-32%)
+            tl.to(
+              fishContainer.rotation,
+              {
+                y: Math.PI,
+                duration: 0.04,
+                ease: "sine.inOut",
+              },
+              0.28
+            );
+
+            // PHASE 5: Swim right to left slowly (32-52%)
+            tl.to(
+              fishContainer.position,
+              {
+                x: -35,
+                y: -8,
+                duration: 0.2,
+                ease: "none",
+              },
+              0.32
+            );
+
+            // Gentle wave motion during swim
+            tl.to(
+              fishContainer.position,
+              {
+                y: "+=0.8",
+                duration: 0.08,
+                repeat: 2,
+                yoyo: true,
+                ease: "sine.inOut",
+              },
+              0.36
+            );
+
+            // PHASE 6: Turn around to face right (52-56%)
+            tl.to(
+              fishContainer.rotation,
+              {
+                y: 0,
+                duration: 0.04,
+                ease: "sine.inOut",
+              },
+              0.52
+            );
+
+            // PHASE 7: Swim left to right slowly (56-76%)
+            tl.to(
+              fishContainer.position,
+              {
+                x: 35,
+                y: -8,
+                duration: 0.2,
+                ease: "none",
+              },
+              0.56
+            );
+
+            // Gentle wave motion
+            tl.to(
+              fishContainer.position,
+              {
+                y: "+=1.2",
+                duration: 0.08,
+                repeat: 2,
+                yoyo: true,
+                ease: "sine.inOut",
+              },
+              0.62
+            );
+
+            // PHASE 8: Turn to face left (76-80%)
+            tl.to(
+              fishContainer.rotation,
+              {
+                y: Math.PI,
+                duration: 0.04,
+                ease: "sine.inOut",
+              },
+              0.76
+            );
+
+            // PHASE 9: Final swim right to left (80-88%)
+            tl.to(
+              fishContainer.position,
+              {
+                x: -35,
+                y: -6,
+                duration: 0.16,
+                ease: "power1.inOut",
+              },
+              0.84
+            );
+
+            // Wave motion during final swim
+            tl.to(
+              fishContainer.position,
+              {
+                y: "+=0.8",
+                duration: 0.06,
+                repeat: 2,
+                yoyo: true,
+                ease: "sine.inOut",
+              },
+              0.86
+            );
+
+            // PHASE 10: Turn to face right and prepare slow exit (88-94%)
+            tl.to(
+              fishContainer.rotation,
+              {
+                y: 0,
+                z: Math.PI / 12,
+                duration: 0.09,
+                ease: "sine.inOut",
+              },
+              0.92
+            );
+
+            // PHASE 11: VERY SLOW graceful exit swimming right (94-100%)
+            tl.to(
+              fishContainer.position,
+              {
+                x: 35,
+                y: -1.5,
+                duration: 0.18,
+                ease: "sine.inOut",
+              },
+              0.97
+            );
+
+            document.getElementById("loading").style.display = "none";
+            console.log("🐟 Fish ready! Scroll to begin!");
+          },
+          (progress) => {
+            const percent = Math.round(
+              (progress.loaded / progress.total) * 100
+            );
+            document.getElementById(
+              "loading"
+            ).textContent = `Loading... ${percent}%`;
+          },
+          (error) => {
+            console.error("Error:", error);
+            document.getElementById("loading").textContent =
+              "Error loading fish";
+          }
+        );
+      }
+
+      camera.position.set(0, 2, 12);
+      camera.lookAt(0, 0, 0);
+
+      const clock = new THREE.Clock();
+
+      function animate() {
+        requestAnimationFrame(animate);
+
+        const delta = clock.getDelta();
+        if (mixer) mixer.update(delta);
+
+        if (water) {
+          water.material.uniforms["time"].value += 1.0 / 240.0;
+        }
+
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      let scrolled = false;
+      window.addEventListener("scroll", () => {
+        if (!scrolled) {
+          document.getElementById("scroll-hint").style.display = "none";
+          scrolled = true;
+        }
+      });
+    </script>
+  </body>
+</html>
