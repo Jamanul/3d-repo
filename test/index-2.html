@@ -14,12 +14,7 @@
       body {
         margin: 0;
         overflow-x: hidden;
-        background: linear-gradient(
-          to bottom,
-          #1a1a2e 0%,
-          #0f0f1e 50%,
-          #000000 100%
-        );
+        background: linear-gradient(to bottom, #fff 0%, #fff 50%, #fff 100%);
       }
       .custom-relative {
         position: relative;
@@ -338,7 +333,7 @@
                 sunColor: { value: new THREE.Color(0x7f7f7f) },
                 sunDirection: { value: new THREE.Vector3(0.70707, 0.70707, 0) },
                 eye: { value: new THREE.Vector3() },
-                waterColor: { value: new THREE.Color(0x555555) },
+                waterColor: { value: new THREE.Color(options.waterColor) },
               },
             ]),
             vertexShader: `
@@ -663,7 +658,16 @@
                 scrub: 2.5,
                 onUpdate: (self) => {
                   if (water) {
-                    water.visible = self.progress < 0.14;
+                    const baseWaterY = -2;
+                    const maxWaterHeight = 5; // big movement so it's visible
+
+                    // 1) Move water visibly upward
+                    water.position.y =
+                      baseWaterY + self.progress * maxWaterHeight;
+
+                    // 2) Fade water when going away
+                    const fade = 1 - self.progress; // 1 → 0 when scrolling down
+                    water.material.uniforms.alpha.value = fade;
                   }
                 },
               },
@@ -880,6 +884,8 @@
 
       const clock = new THREE.Clock();
 
+      const hero = document.querySelector(".hero-section");
+
       function animate() {
         requestAnimationFrame(animate);
 
@@ -887,11 +893,40 @@
         if (mixer) mixer.update(delta);
 
         if (water) {
-          water.material.uniforms["time"].value += 1.0 / 240.0;
+          // Get hero position in viewport
+          const rect = hero.getBoundingClientRect();
+
+          // Calculate hero visibility progress (0 → 1)
+          let heroVisibilityProgress = 0;
+
+          const heroHeight = rect.height;
+
+          if (rect.bottom > 0 && rect.top < window.innerHeight) {
+            // Portion of hero visible
+            const visibleTop = Math.max(0, rect.top);
+            const visibleBottom = Math.min(window.innerHeight, rect.bottom);
+            const visibleHeight = visibleBottom - visibleTop;
+
+            heroVisibilityProgress = visibleHeight / heroHeight;
+            water.visible = true;
+          } else {
+            heroVisibilityProgress = 0;
+            water.visible = false;
+          }
+
+          // 🔥 Fade water smoothly
+          if (water.material && water.material.uniforms.alpha) {
+            water.material.uniforms.alpha.value = heroVisibilityProgress * 0.8;
+            // 0.9 = max alpha. Adjust if needed
+          }
+
+          // Water wave animation
+          water.material.uniforms.time.value += 1.0 / 240.0;
         }
 
         renderer.render(scene, camera);
       }
+
       animate();
 
       window.addEventListener("resize", () => {
